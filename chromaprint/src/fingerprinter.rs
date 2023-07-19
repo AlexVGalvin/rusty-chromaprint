@@ -7,6 +7,7 @@ use crate::stages::{AudioConsumer, Stage};
 use crate::fft::Fft;
 use crate::filter::{Filter, FilterKind};
 use crate::fingerprint_calculator::FingerprintCalculator;
+use crate::fingerprint_compressor::FingerprintCompressor;
 use crate::quantize::Quantizer;
 
 /// Structure containing configuration for a [Fingerprinter].
@@ -176,6 +177,11 @@ impl Fingerprinter {
     /// Returns the fingerprint of the last consumed audio data.
     pub fn fingerprint(&self) -> &[u32] {
         self.processor.output()
+    }
+
+    // Returns the compressed and base64-encoded fingerprint
+    pub fn compressed_fingerprint(&self) -> String {
+        FingerprintCompressor::compress(self.fingerprint(), 0)
     }
 }
 

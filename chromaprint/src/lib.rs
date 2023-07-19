@@ -11,6 +11,7 @@ mod classifier;
 mod fft;
 mod filter;
 mod fingerprint_calculator;
+mod fingerprint_compressor;
 mod fingerprint_matcher;
 mod fingerprinter;
 mod gaussian;
