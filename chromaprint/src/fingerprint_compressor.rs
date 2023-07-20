@@ -69,9 +69,9 @@ impl FingerprintCompressor {
         output[0] = algorithm;
     
         let size_bytes = fingerprint_size.to_le_bytes();
-        output[1] = size_bytes[6];
-        output[2] = size_bytes[7];
-        output[3] = size_bytes[8];
+        output[1] = size_bytes[5];
+        output[2] = size_bytes[6];
+        output[3] = size_bytes[7];
     
         // append 3 MSBs from every normal byte, 5 MSBs from every exceptional byte to the fingerprint
         Self::copy_significant_bits(&normal_bytes, &mut output, 4, 0, 3);
