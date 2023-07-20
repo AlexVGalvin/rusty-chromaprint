@@ -1,6 +1,5 @@
-use bitlab::*;
+use bitvec::prelude::*;
 use base64::prelude::*;
-use rustfft::num_traits::ToPrimitive;
 
 const K_NORMAL_BITS: u8 = 3;
 const K_MAX_NORMAL_VALUE: u8 = (1 << K_NORMAL_BITS) - 1;
@@ -8,14 +7,20 @@ const K_MAX_NORMAL_VALUE: u8 = (1 << K_NORMAL_BITS) - 1;
 pub(crate) struct FingerprintCompressor{}
 
 impl FingerprintCompressor {
-    fn copy_significant_bits(source_vec: &Vec<u8>, output_vec: &mut Vec<u8>, byte_index: u32, bit_index: u32, num_bits: u32) {
+    // fn copy_significant_bits(source_vec: &Vec<u8>, output_vec: &mut Vec<u8>, byte_index: u32, bit_index: u32, num_bits: u32) {
 
-        let mut bit_index = bit_index;
-        for byte in source_vec {
-            output_vec.set(byte_index, bit_index, num_bits, byte >> (8 - num_bits)).unwrap();
-            bit_index += num_bits;
-        }
-    }
+    //     let mut bit_index = bit_index;
+    //     for byte in source_vec {
+    //         output_vec.set(byte_index, bit_index, num_bits, byte >> (8 - num_bits)).unwrap();
+    //         bit_index += num_bits;
+    //     }
+
+    //     // let i = 4 * 8usize;
+    //     // let c = output[i..i+normal_bits_size*8].chunks_mut(3);
+    //     // for byte in normal_bytes {
+    //     //     c.next().unwrap().store_le(byte >> (8-3));
+    //     // }
+    // }
     
     fn process_subfingerprint(sub: u32, normal_bits: &mut Vec<u8>, exceptional_bits: &mut Vec<u8>) {
         let mut sub = sub;
@@ -72,15 +77,27 @@ impl FingerprintCompressor {
         output[1] = size_bytes[5];
         output[2] = size_bytes[6];
         output[3] = size_bytes[7];
+
+        let output_bits = output.as_mut_bits();
+
+        let i = 4 * 8usize;
+        let mut c: bitvec::slice::ChunksMut<'_, u8, Lsb0> = output_bits[i..i+normal_bits_size*8].chunks_mut(3);
+        for byte in normal_bytes {
+            c.next().unwrap().store_le(byte >> (8-3));
+        }
+
+        let i = (4+normal_bits_size)* 8 ;
+        let mut c = output_bits[i..i+exceptional_bits_size*8].chunks_mut(5);
+        for byte in exceptional_bytes {
+            c.next().unwrap().store_le(byte >> (8-3));
+        }
+        
     
         // append 3 MSBs from every normal byte, 5 MSBs from every exceptional byte to the fingerprint
-        Self::copy_significant_bits(&normal_bytes, &mut output, 4, 0, 3);
-        Self::copy_significant_bits(&exceptional_bytes, &mut output, 4 + normal_bits_size.to_u32().unwrap(), 0, 3);
+        // Self::copy_significant_bits(&normal_bytes, &mut output, 4, 0, 3);
+        // Self::copy_significant_bits(&exceptional_bytes, &mut output, 4 + normal_bits_size.to_u32().unwrap(), 0, 3);
     
-        output.truncate(output_size);
         BASE64_URL_SAFE.encode(output)
     }
     
 }
-
-
